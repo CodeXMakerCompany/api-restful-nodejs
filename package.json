@@ -1,0 +1,25 @@
+{
+  "name": "api-restful-node",
+  "version": "1.0.0",
+  "description": "\u001b[C\u001b[D\u001b[D\u001b[CAPI RESTFUL con NodeJS",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "codexmaker",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
+    "connect-multiparty": "^2.2.0",
+    "express": "^4.17.1",
+    "jwt-simple": "^0.5.6",
+    "moment": "^2.24.0",
+    "mongoose": "^5.8.2",
+    "mongoose-paginate-v2": "^1.3.6",
+    "validator": "^12.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.2"
+  }
+}
