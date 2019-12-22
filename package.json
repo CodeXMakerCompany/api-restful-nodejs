@@ -4,6 +4,7 @@
   "description": "\u001b[C\u001b[D\u001b[D\u001b[CAPI RESTFUL con NodeJS",
   "main": "index.js",
   "scripts": {
+    "start": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "codexmaker",
