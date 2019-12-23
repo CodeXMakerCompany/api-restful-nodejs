@@ -4,6 +4,7 @@
 
 //Instanciar libreria para Validar
 var validator = require('validator');
+var User = require('../models/user');
 
 var controller = {
 
@@ -33,29 +34,49 @@ var controller = {
 
     if (validate_name && validate_surname && validate_email && validate_password) {
       //Crear objeto
+      var user = new User();
 
       //Asignar valores al usuario
+      user.name = params.name;
+      user.surname = params.surname;
+      user.email = params.email.toLowerCase();
+      user.role = 'ROLE_USER';
+      user.image = null;
 
       //Comprobar si el usuario ya exite
+      User.findOne({email: user.email}, (err, issetUser) => {
+        if (err) {
+          return res.status(500).send({
+            message: "Error al comprobar duplicidad del usuario",
+            params
+          });
+        }
 
-      //Si no existe cifrar password
+        if (!issetUser) {
+          //Si no existe cifrar password
 
-      //Guardar los datos
+          //Guardar los datos
 
-      //Devolver respuesta
+          //Devolver respuesta
+          return res.status(200).send({
+            message: "El usuario no esta registrado",
+            params
+          });
+        }else {
+          return res.status(500).send({
+            message: "Elusuario ya esta registrado.",
+            params
+          });
+        }
 
-      console.log("detecto toda la data en orden");
+      });
+
     }else {
       return res.status(400).send({
-        message: "Validacion de los datos del usuario incorrectp. Intentelo de nuevo."
+        message: "Validacion de los datos del usuario incorrecta. Intentelo de nuevo."
       });
     }
 
-
-    return res.status(200).send({
-      message: "Registro de usuarios",
-      params
-    });
   }
 
 };
