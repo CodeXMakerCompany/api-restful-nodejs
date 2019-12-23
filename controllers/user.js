@@ -2,9 +2,12 @@
 
 'use strict';
 
-//Instanciar libreria para Validar
+//Cargar libreria para Validar
 var validator = require('validator');
+// Cargar modelo Usuario
 var User = require('../models/user');
+//Cargar libreria de encriptado
+var bcrypt = require('bcryptjs');
 
 var controller = {
 
@@ -54,14 +57,33 @@ var controller = {
 
         if (!issetUser) {
           //Si no existe cifrar password
+          bcrypt.hash(params.password, 8, function(err, hash) {
+            user.password = hash;
 
-          //Guardar los datos
+            //Guardar los datos
+            user.save((err, userStored) => {
+              if (err) {
+                return res.status(500).send({
+                  message: "Error al registrar el usuario",
+                  params
+                });
+              }
 
-          //Devolver respuesta
-          return res.status(200).send({
-            message: "El usuario no esta registrado",
-            params
-          });
+              if (!userStored) {
+                return res.status(500).send({
+                  message: "El usuario no se ha guardado",
+                  params
+                });
+              }
+
+              //Devolver respuesta
+              return res.status(200).send({
+                status: 'success',
+                user: userStored
+              });
+            });//Close save
+          });//Close bcrypt
+
         }else {
           return res.status(500).send({
             message: "Elusuario ya esta registrado.",
