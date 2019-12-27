@@ -139,7 +139,7 @@ var controller = {
 
           //Si es correcto
           if (check) {
-
+            var testdos= 34;
             //Generar token de jwt y devlverlo(mas tarde)
             if (params.gettoken) {
               //Devolver datos
