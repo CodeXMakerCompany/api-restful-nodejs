@@ -1,8 +1,11 @@
 //Controlador de usuarios
 
 'use strict';
-
-//Instanciar libreria para Validar
+//Cargar Modelo
+var User = require('../models/user');
+//Cargar liberia de encriptacion
+var bcrypt = require('bcryptjs');
+//Cargar libreria para Validar
 var validator = require('validator');
 
 var controller = {
@@ -33,31 +36,83 @@ var controller = {
 
     if (validate_name && validate_surname && validate_email && validate_password) {
       //Crear objeto
+      var user = new User();
 
       //Asignar valores al usuario
+      user.name = params.name;
+      user.surname = params.surname;
+      user.email = params.email.toLowerCase();
+      user.role = 'ROLE_USER';
+      user.image = null;
 
       //Comprobar si el usuario ya exite
+      User.findOne({email: user.email}, (err, issetUser) => {
+        if (err) {
+          return res.status(500).send({
+            message: "Error al comprobar duplicidad del usuario."
+          });
+        }
 
-      //Si no existe cifrar password
+        if (!issetUser) {
+          //Si no existe cifrar password
+          bcrypt.hash(params.password, 8, function(err, hash) {
+            user.password = hash;
 
-      //Guardar los datos
+           //Guardar los datos
+           user.save((err, userStored) => {
+             if (err) {
+               return res.status(500).send({
+                 message: "Error al guardar usuario."
+               });
+             }
 
-      //Devolver respuesta
+               if (!userStored) {
+                 return res.status(500).send({
+                   message: "Error al guardar usuario."
+                 });
+               }
+
+               return res.status(200).send({user: userStored});
+             });// Close save
+
+          });// Close bcrypt
+
+        }else{
+          return res.status(200).send({
+            message: "El usuario ya esta registrado."
+          });
+        }
+
+      });
 
       console.log("detecto toda la data en orden");
     }else {
       return res.status(400).send({
-        message: "Validacion de los datos del usuario incorrectp. Intentelo de nuevo."
+        message: "Validacion de los datos del usuario incorrecta. Intentelo de nuevo."
       });
     }
 
+  },
 
+  login: function(req, res){
+    //Recoger los parametros de la petición
+    var params = req.body;
+    
+    //Validar los datos
+
+    //Buscar usuarios que coincidan con el email
+
+    // Comprobar la contraseña (Conincidencia de email y usuario / bcrypt)
+
+    // Si es correcto,
+
+    // Generar token de jwt y devolverlo(mas adelante)
+
+    //Devolver los datos
     return res.status(200).send({
-      message: "Registro de usuarios",
-      params
+      message: "Metodo de login"
     });
   }
-
 };
 
 module.exports = controller;
