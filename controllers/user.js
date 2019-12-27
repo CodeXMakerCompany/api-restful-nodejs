@@ -7,6 +7,14 @@ var User = require('../models/user');
 var bcrypt = require('bcryptjs');
 //Cargar libreria para Validar
 var validator = require('validator');
+// Cargar modelo Usuario
+var User = require('../models/user');
+//Cargar libreria de encriptado
+var bcrypt = require('bcryptjs');
+
+//Servicios
+//token jwt
+var jwt = require('../services/jwt');
 
 var controller = {
 
@@ -85,7 +93,6 @@ var controller = {
 
       });
 
-      console.log("detecto toda la data en orden");
     }else {
       return res.status(400).send({
         message: "Validacion de los datos del usuario incorrecta. Intentelo de nuevo."
@@ -97,9 +104,12 @@ var controller = {
   login: function(req, res){
     //Recoger los parametros de la petición
     var params = req.body;
-    
-    //Validar los datos
 
+    //Validar los datos
+    var validate_email    = !validator.isEmpty(params.email) && validator.isEmail(params.email);
+    var validate_password = !validator.isEmpty(params.password);
+
+    
     //Buscar usuarios que coincidan con el email
 
     // Comprobar la contraseña (Conincidencia de email y usuario / bcrypt)
