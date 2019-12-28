@@ -112,7 +112,56 @@ var controller = {
     
     //Buscar usuarios que coincidan con el email
 
+<<<<<<< HEAD
     // Comprobar la contraseña (Conincidencia de email y usuario / bcrypt)
+=======
+        if (err) {
+          return res.status(500).send({
+            message: "Error al intentar identificrse"
+          });
+        }
+
+        if (!user) {
+          return res.status(404).send({
+            message: "El usuario no existe"
+          });
+        }
+
+        //Si lo encuentra
+        //Comprobar que la contraseña (conicidencia de email y password / bcryptjs)
+        bcrypt.compare(params.password, user.password, (err, check) => {
+
+          //Si es correcto
+          if (check) {
+            var testdos= 34;
+            //Generar token de jwt y devlverlo(mas tarde)
+            if (params.gettoken) {
+              //Devolver datos
+              return res.status(200).send({
+                token: jwt.createToken(user)
+              });
+            }else{
+              //Limpiar objeto eliminar propiedades
+              user.password = undefined;
+              //Devolver datos
+              return res.status(200).send({
+                status: "success",
+                user
+              });
+            }
+
+          }else{
+
+            return res.status(200).send({
+              message: "Las credenciales no son correctas"
+            });
+          }
+
+        });
+
+
+      });
+>>>>>>> 09bfd57cdf02c35dcede23c2be5686baa6e365d8
 
     // Si es correcto,
 
