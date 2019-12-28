@@ -11,6 +11,10 @@ var validator = require('validator');
 var User = require('../models/user');
 //Cargar libreria de encriptado
 var bcrypt = require('bcryptjs');
+//Libreria para ficheros
+var fs = require('fs');
+var path = require('path');
+
 
 //Servicios
 //token jwt
@@ -35,10 +39,17 @@ var controller = {
     var params = req.body;
 
     //Validar los datos
-    var validate_name     = !validator.isEmpty(params.name);
-    var validate_surname  = !validator.isEmpty(params.surname);
-    var validate_email    = !validator.isEmpty(params.email) && validator.isEmail(params.email);
-    var validate_password = !validator.isEmpty(params.password);
+    try {
+      var validate_name     = !validator.isEmpty(params.name);
+      var validate_surname  = !validator.isEmpty(params.surname);
+      var validate_email    = !validator.isEmpty(params.email) && validator.isEmail(params.email);
+      var validate_password = !validator.isEmpty(params.password);
+    } catch (err) {
+      return res.status(200).send({
+        message: "No se han enviado los datos correctos"
+      });
+    }
+
 
     //console.log(validate_name, validate_surname, validate_email, validate_password);
 
@@ -106,18 +117,24 @@ var controller = {
     var params = req.body;
 
     //Validar los datos
-    var validate_email    = !validator.isEmpty(params.email) && validator.isEmail(params.email);
-    var validate_password = !validator.isEmpty(params.password);
+    try {
+      var validate_email    = !validator.isEmpty(params.email) && validator.isEmail(params.email);
+      var validate_password = !validator.isEmpty(params.password);
+    } catch (err) {
+      return res.status(500).send({
+        message: "No se han enviado los datos necesarios"
+      });
+    }
 
-    
+
+
     //Buscar usuarios que coincidan con el email
-
-<<<<<<< HEAD
+     User.findOne({email: params.email.toLowerCase()}, (err, user) =>{
     // Comprobar la contraseña (Conincidencia de email y usuario / bcrypt)
-=======
+
         if (err) {
           return res.status(500).send({
-            message: "Error al intentar identificrse"
+            message: "Error al intentar identificarse"
           });
         }
 
@@ -133,7 +150,6 @@ var controller = {
 
           //Si es correcto
           if (check) {
-            var testdos= 34;
             //Generar token de jwt y devlverlo(mas tarde)
             if (params.gettoken) {
               //Devolver datos
@@ -159,19 +175,172 @@ var controller = {
 
         });
 
-
-      });
->>>>>>> 09bfd57cdf02c35dcede23c2be5686baa6e365d8
-
-    // Si es correcto,
-
-    // Generar token de jwt y devolverlo(mas adelante)
-
-    //Devolver los datos
-    return res.status(200).send({
-      message: "Metodo de login"
     });
-  }
+  },
+
+  update: function(req, res){
+    // Crear midleware para comprobar el jwt-token, ponerselo a la ruta
+
+    // Recoger los datos del usuario
+    var params = req.body;
+
+    //Validar los datos
+    try {
+      var validate_name     = !validator.isEmpty(params.name);
+      var validate_surname  = !validator.isEmpty(params.surname);
+      var validate_email    = !validator.isEmpty(params.email) && validator.isEmail(params.email);
+    }catch(err){
+      return res.status(200).send({
+        status: "Faltan datos por enviar",
+        params
+      });
+    }
+
+    // Eliminar propiedades inecesarias
+    delete params.password;
+    var userId = req.user.sub;
+
+    if (req.user.email == params.email) {
+      // Buscar y actualizar
+      User.findOneAndUpdate({_id: userId}, params, {new:true}, (err, userUpdated) => {
+
+          if (err) {
+            return res.status(500).send({
+              status: "error",
+              message: 'Error al actualizar el usuario'
+            });
+          }
+          if (!userUpdated) {
+            return res.status(500).send({
+              status: "error",
+              message: 'Error al actualizar el usuario'
+            });
+          }
+
+          // Dar respuesta
+          return res.status(200).send({
+            status: "success",
+            user: userUpdated
+          });
+
+        });
+    }
+    //Comprobar si el email es unico
+    if (req.user.email != params.email) {
+
+      //Buscar usuarios que coincidan con el email
+       User.findOne({email: params.email.toLowerCase()}, (err, user) => {
+
+           if (err) {
+             return res.status(500).send({
+               status: "error",
+               message: 'Error al actualizar el usuario'
+             });
+           }
+
+            if (user) {
+              return res.status(200).send({
+                message: 'El email no puede ser modificado'
+              });
+            }
+
+            if (!user) {
+
+              // Buscar y actualizar
+              User.findOneAndUpdate({_id: userId}, params, {new:true}, (err, userUpdated) => {
+
+                  if (err) {
+                    return res.status(500).send({
+                      status: "error",
+                      message: 'Error al actualizar el usuario'
+                    });
+                  }
+                  if (!userUpdated) {
+                    return res.status(500).send({
+                      status: "error",
+                      message: 'Error al actualizar el usuario'
+                    });
+                  }
+
+                  // Dar respuesta
+                  return res.status(200).send({
+                    status: "success",
+                    user: userUpdated
+                  });
+
+                });
+            }
+
+        });
+    }
+
+
+
+
+
+
+},
+
+  uploadAvatar: function(req, res){
+
+    // Configurar modulo multiparty (md) routes/users.js
+
+    // Recoger el fichero de la peticion
+    var file_name = 'Avatar no subido...';
+
+    if (!req.files) {
+      return res.status(404).send({
+        status: 'error',
+        message: file_name
+      });
+    }
+      // Nombre y extension del archivo subido
+      var file_path = req.files.file0.path;
+      var file_split = file_path.split('\\');
+      // Advertencia **** En linux o mac
+      // var file_split = file_path.split('/');
+      var file_name = file_split[2];
+
+      //Extension del archivo
+      var ext_split = file_name.split('\.');
+      var file_ext = ext_split[1];
+
+      // Comprobar extension (solo imagenes), si no es valida borrar fichero subido
+      if (file_ext != 'png' && file_ext != 'jpg' && file_ext != 'jpeg' && file_ext != 'gif') {
+        fs.unlink(file_path, (err) =>{
+
+          return res.status(200).send({
+            status: 'error',
+            message: "La extensión del archivo no es válida"
+          });
+        });
+      }else{
+        // Sacar el id del usuario identificado
+        var userId = req.user.sub;
+
+        //Buscar y actualizar documento bd
+        User.findOneAndUpdate({_id: userId}, {image: file_name}, {new:true}, (err, userUpdated) =>{
+
+          if (err || !userUpdated) {
+            return res.status(500).send({
+              status: 'error',
+              message: "Error al actualizar el usuario."
+            });
+          }
+          // Devolver respuesta
+
+          return res.status(200).send({
+            status: 'success',
+            user: userUpdated
+          });
+        });
+
+      }
+
+
+    }
+
+
 };
 
 module.exports = controller;
