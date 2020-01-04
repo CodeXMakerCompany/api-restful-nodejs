@@ -33,7 +33,14 @@ var controller = {
       });
     }
       // Nombre y extension del archivo subido
+      if (!req.files.file0) {
+        return res.status(404).send({
+          status: 'error',
+          message: 'No detecto ninguna imagen'
+        });
+      }
       var file_path = req.files.file0.path;
+
       var file_split = file_path.split('\\');
       // Advertencia **** En linux o mac
       // var file_split = file_path.split('/');
@@ -58,10 +65,12 @@ var controller = {
 
         //Asignar valores al usuario
         post.userId = userId;
-        post.categoryId = 0;
+        post.categoryId = params.categoryId;
         post.title = params.title;
         post.content = params.content;
         post.image = file_name;
+
+        //Añadir fecha
 
         // Guardar el registro con los demas parametros
         post.save((err, postStored) => {
@@ -83,12 +92,156 @@ var controller = {
 
   },
 
+  delete:function(req, res){
+
+    // Sacar el id del post de la url
+    var postId = req.params.id;
+
+    // Find and delete por postId y por userId
+    Post.findOneAndDelete({_id: postId, user: req.user.sub}, (err, postRemoved) => {
+
+      if (err || !postRemoved) {
+        return res.status(500).send({
+          status: 'error',
+          message: "Error en la petición"
+        });
+      }
+
+      // Devolver respuesta
+      return res.status(200).send({
+        status: "success",
+        post: postRemoved
+      });
+    })
+
+  },
+
   listPosts: function(req, res){
-    return res.status(200).send({
-      message: "Mi funcion es devolver data"
+
+    // Cargar libreria de paginacion en la clase
+
+    // Recoger la pagina actual
+    if (!req.params.page || req.params.page == 0 || req.params.page == null || req.params.page == undefined) {
+        var page = 1
+    }else {
+      var page = parseInt(req.params.page);
+    }
+
+    // Indicar las opciones de paginacion
+    const options = {
+      sort:{ date: -1},
+      populate: 'userId',
+      page: page,
+      limit: 12,
+      collation: {
+        locale: 'es'
+      }
+    };
+
+    // Find paginado
+    Post.paginate({}, options, (err, posts) =>{
+
+      //Devolver resultado (posts, total de posts, total de paginas)
+      if (err || !posts) {
+        return res.status(404).send({
+          status: 'error',
+          message: "No hay posts que mostrar."
+        });
+      }
+
+      return res.status(200).send({
+        status: 'success',
+        posts: posts.docs,
+        totalDocs: posts.totalDocs,
+        totalPages: posts.totalPages,
+        options
+      });
+
     });
+
+  },
+
+  getMyPostByUser: function(req, res){
+
+    //Conseguir id de usuario
+    var userId = req.params.user;
+
+    // Find con una condicion de usuario
+    Post.find({
+      userId: userId
+    })
+    .sort([['date', 'descending']])
+    .exec((err, posts) => {
+
+      if (err || !posts) {
+        return res.status(500).send({
+          status: 'error',
+          message: "Error en la petición"
+        });
+      }
+
+      //resultado
+      return res.status(200).send({
+        status: 'success',
+        posts
+      });
+    });
+  },
+
+  getPost: function(req, res){
+    // Sacar el id del post de la url
+    var postId = req.params.id;
+
+    // Find por id el post
+    Post.findById(postId)
+        .populate('userId')
+        .exec((err, post) => {
+
+          if (err || !post) {
+            return res.status(500).send({
+              status: 'error',
+              message: "Error en la petición"
+            });
+          }
+
+          return res.status(200).send({
+            status: "success",
+            post
+          });
+
+        });
+
+  },
+
+  search: function(req, res){
+    // Sacar el string a buscar
+    var searchString = req.params.search;
+
+    // Find con un operador or
+    Post.find({ "$or":[
+      { "title": { "$regex": searchString, "$options": "i"} },
+      { "content": { "$regex": searchString, "$options": "i"} },
+      { "tags": { "$regex": searchString, "$options": "i"} },
+      ]})
+      .exec((err, posts) => {
+
+        if (err || !posts) {
+          return res.status(500).send({
+            status: 'error',
+            message: "Error en la petición"
+          });
+        }
+        //Devolver resultado
+
+        return res.status(200).send({
+          status: "success",
+          posts
+        });
+
+      });
+
   }
 
-};
+}
 
 module.exports = controller;
