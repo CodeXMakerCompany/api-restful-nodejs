@@ -115,7 +115,6 @@ var controller = {
   login: function(req, res){
     //Recoger los parametros de la petición
     var params = req.body;
-
     //Validar los datos
     try {
       var validate_email    = !validator.isEmpty(params.email) && validator.isEmail(params.email);
