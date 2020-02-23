@@ -26,30 +26,69 @@ var controller = {
     var params = req.body;
 
     //Validar datos
+    var file_name = 'Avatar no subido...';
 
-    //Instanciar nuevo objeto
-    var category = new Category();
+    if (!req.files) {
+      return res.status(404).send({
+        status: 'error',
+        message: file_name
+      });
+    }
 
-    //Asignar valores a la categoria
-    category.name = params.name;
+    // Nombre y extension del archivo subido
+    if (!req.files.file0) {
+      return res.status(404).send({
+        status: 'error',
+        message: 'No detecto ninguna imagen'
+      });
+    }
 
-    //Guardar
-    category.save((err, categoryStored) => {
-      if (err) {
-        return res.status(500).send({
-          message: "Error al guardar la categoria."
+    var file_path = req.files.file0.path;
+
+    var file_split = file_path.split('\\');
+    // Advertencia **** En linux o mac
+    // var file_split = file_path.split('/');
+    var file_name = file_split[2];
+
+    //Extension del archivo
+    var ext_split = file_name.split('\.');
+    var file_ext = ext_split[1];
+
+    // Comprobar extension (solo imagenes), si no es valida borrar fichero subido
+    if (file_ext != 'png' && file_ext != 'jpg' && file_ext != 'jpeg' && file_ext != 'gif') {
+      fs.unlink(file_path, (err) =>{
+        return res.status(200).send({
+          status: 'error',
+          message: "La extensión del archivo no es válida"
         });
-      }
+      });
+    }else{
+      //Instanciar nuevo objeto
+      var category = new Category();
 
-        if (!categoryStored) {
+      //Asignar valores a la categoria
+      category.name = params.name;
+      category.description = params.description;
+      category.image = file_name;
+      category.created_at = new Date();
+
+      //Guardar
+      category.save((err, categoryStored) => {
+        if (err) {
           return res.status(500).send({
             message: "Error al guardar la categoria."
           });
         }
 
-        return res.status(200).send({category: categoryStored});
-      });// Close save
+          if (!categoryStored) {
+            return res.status(500).send({
+              message: "Error al guardar la categoria."
+            });
+          }
 
+          return res.status(200).send({category: categoryStored});
+        });// Close save
+    }
   },
 
   delete:function(req, res){
@@ -71,6 +110,26 @@ var controller = {
         categories
       });
     });
+  },
+
+  getImgCategory: function(req, res){
+
+    var fileName = req.params.fileName;
+    var pathFile = './uploads/category/'+fileName;
+
+    //Comprobar que exista el fichero
+    fs.exists(pathFile, (exists) => {
+
+      if (exists) {
+        res.sendFile(path.resolve(pathFile));
+      }else{
+        return res.status(404).send({
+          message: "La imagen no existe"
+        });
+      }
+
+    });
+
   }
 
 };

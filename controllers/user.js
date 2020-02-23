@@ -358,7 +358,40 @@ var controller = {
     });
 
   },
+  getVipUsers: function(req, res){
 
+    //Traer los primero usuarios
+    //Notas find-> busca, sort->order by desc, limit->limite de registros
+    User.find().sort({"_id" : -1}).limit(5).exec((err, users) =>{
+      if (err || !users) {
+        return res.status(404).send({
+          status: 'error',
+          message: "No hay usuarios que mostrar."
+        });
+      }
+      return res.status(200).send({
+        status: 'success',
+        users
+      });
+    });
+
+  },
+  getLastRegisteredUsers: function(req, res){
+    //Traer los primero usuarios
+    //Notas find-> busca, sort->order by desc, limit->limite de registros
+    User.find().sort({"_id" : -1}).limit(5).exec((err, users) =>{
+      if (err || !users) {
+        return res.status(404).send({
+          status: 'error',
+          message: "No hay usuarios que mostrar."
+        });
+      }
+      return res.status(200).send({
+        status: 'success',
+        users
+      });
+    });
+  },
   getUsers: function(req, res){
     User.find().exec((err, users) =>{
       if (err || !users) {

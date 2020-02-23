@@ -20,6 +20,8 @@ router.post('/login', UserController.login);
 router.put('/update', md_auth.authenticated, UserController.update);
 router.post('/upload-avatar', [md_auth.authenticated, md_upload],UserController.uploadAvatar);
 router.get('/avatar/:fileName', UserController.getAvatar);
+router.get('/vip-users', UserController.getVipUsers);
+router.get('/last-users', UserController.getLastRegisteredUsers);
 router.get('/users', UserController.getUsers);
 router.get('/user/:userId', UserController.getUser);
 
